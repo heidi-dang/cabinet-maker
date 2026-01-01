@@ -1,0 +1,99 @@
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #007bff;   
+}
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 0;
+    margin: 0;
+}
+
+main {
+    margin: 0.5rem;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: solid 1px var(--primary-color);
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    cursor: pointer;
+
+    &:hover {
+        background: color-mix(in srgb, var(--primary-color) 100%, black 20%);
+    }
+}
+
+input, select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+}
+
+.ww-input-layout {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    gap: 0.5rem;
+
+    label {
+        display: inline-block;
+        min-width: 100px;
+    }   
+}
+
+.sides-editor {
+    $thickness: 10px;
+
+    display: block;
+    position: relative;
+
+    .left {
+        position: absolute;
+        left: 0px;
+        top: $thickness;
+        height: calc(100% - 2 * $thickness);
+    }
+}
+
+.hstack {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.vstack {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+}
+
+$sizes: 0, 1, 2, 3, 4;
+
+@each $i in $sizes {
+    .p-#{$i} {
+        padding: $i * 0.25rem;
+    }
+    .m-#{$i} {
+        margin: $i * 0.25rem;
+    }
+
+    .gap-#{$i} {
+        gap: $i * 0.25rem;
+    }
+}
+
+.flex-grow {
+    flex-grow: 1;
+}
+
+.w-100 {
+    width: 100%;
+}

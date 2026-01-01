@@ -1,0 +1,35 @@
+{
+  "name": "woodworking",
+  "version": "1.0.0",
+  "description": "Different woodworking tools",
+  "source": "src/index.html",
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router": "^7.8.1",
+    "three": "^0.179.1"
+  },
+  "devDependencies": {
+    "@parcel/transformer-sass": "^2.15.4",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@types/three": "^0.179.0",
+    "parcel": "latest",
+    "parcel-namer-hashless": "^1.0.7"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "start": "parcel",
+    "build": "parcel build --no-content-hash --public-url ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zVolodymyr/woodworking.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zVolodymyr/woodworking/issues"
+  },
+  "homepage": "https://github.com/zVolodymyr/woodworking#readme"
+}

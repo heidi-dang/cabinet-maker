@@ -1,0 +1,14 @@
+.cutlist-editor {
+    display: flex;
+    flex-flow: row nowrap;
+}
+
+.canvas-container {
+    flex: 1;
+    display: flex;
+    flex-flow: column nowrap;
+}
+
+.ww-parts-table {
+    border-collapse: collapse;
+}

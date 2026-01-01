@@ -1,0 +1,15 @@
+.ww-nabbar {
+    display: flex;
+    flex-flow: row nowrap;
+    background: var(--primary-color);
+
+    a {
+        padding: 0.5rem 1rem;
+        text-decoration: none;
+        color: white;
+
+        &.--active {
+            font-weight: 600;
+        }
+    }
+}
