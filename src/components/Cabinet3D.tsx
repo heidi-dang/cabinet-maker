@@ -9,6 +9,8 @@ type Props = {
     depth: number;
     shelves: number;
     showBack: boolean;
+    doors: boolean;
+    doorGap: number; // mm
     onHover: (info: HoverInfo) => void;
 };
 
@@ -34,18 +36,28 @@ export default function Cabinet3D(props: Props) {
         light.position.set(6, 8, 6);
         scene.add(light);
 
-        const normalMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb });
+        const carcassMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb });
+        const doorMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db });
         const highlightMat = new THREE.MeshStandardMaterial({ color: 0xffeb3b });
 
         const w = props.width / 1000;
         const h = props.height / 1000;
         const d = props.depth / 1000;
         const t = 0.018;
+        const gap = props.doorGap / 1000;
 
         const panels: THREE.Mesh[] = [];
 
-        function addPanel(name: string, geo: THREE.BoxGeometry, x: number, y: number, z: number, size: string) {
-            const mesh = new THREE.Mesh(geo, normalMat);
+        function addPanel(
+            name: string,
+            geo: THREE.BoxGeometry,
+            x: number,
+            y: number,
+            z: number,
+            size: string,
+            mat = carcassMat
+        ) {
+            const mesh = new THREE.Mesh(geo, mat);
             mesh.position.set(x, y, z);
             mesh.userData = { name, size };
             scene.add(mesh);
@@ -59,6 +71,7 @@ export default function Cabinet3D(props: Props) {
             scene.add(edges);
         }
 
+        // === CARCASS ===
         addPanel("Left side", new THREE.BoxGeometry(t, h, d), -w / 2, h / 2, 0, `${props.height} × ${props.depth} mm`);
         addPanel("Right side", new THREE.BoxGeometry(t, h, d), w / 2, h / 2, 0, `${props.height} × ${props.depth} mm`);
         addPanel("Top", new THREE.BoxGeometry(w, t, d), 0, h, 0, `${props.width} × ${props.depth} mm`);
@@ -68,6 +81,7 @@ export default function Cabinet3D(props: Props) {
             addPanel("Back", new THREE.BoxGeometry(w, h, t), 0, h / 2, -d / 2, `${props.width} × ${props.height} mm`);
         }
 
+        // === SHELVES ===
         for (let i = 1; i <= props.shelves; i++) {
             addPanel(
                 `Shelf ${i}`,
@@ -75,10 +89,38 @@ export default function Cabinet3D(props: Props) {
                 0,
                 (h / (props.shelves + 1)) * i,
                 0,
-                `${props.width - t * 2 * 1000} × ${props.depth - t * 1000} mm`
+                `${props.width} × ${props.depth} mm`
             );
         }
 
+        // === DOORS ===
+        if (props.doors) {
+            const doorWidth = (w - gap) / 2;
+            const doorDepth = t;
+            const z = d / 2 + doorDepth / 2;
+
+            addPanel(
+                "Left door",
+                new THREE.BoxGeometry(doorWidth, h, doorDepth),
+                -doorWidth / 2 - gap / 2,
+                h / 2,
+                z,
+                `${props.height} × ${props.width / 2} mm`,
+                doorMat
+            );
+
+            addPanel(
+                "Right door",
+                new THREE.BoxGeometry(doorWidth, h, doorDepth),
+                doorWidth / 2 + gap / 2,
+                h / 2,
+                z,
+                `${props.height} × ${props.width / 2} mm`,
+                doorMat
+            );
+        }
+
+        // === HOVER ===
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
         let active: THREE.Mesh | null = null;
@@ -93,12 +135,12 @@ export default function Cabinet3D(props: Props) {
 
             if (hit) {
                 const m = hit.object as THREE.Mesh;
-                if (active && active !== m) active.material = normalMat;
+                if (active && active !== m) active.material = carcassMat;
                 m.material = highlightMat;
                 active = m;
                 props.onHover({ name: m.userData.name, size: m.userData.size });
             } else {
-                if (active) active.material = normalMat;
+                if (active) active.material = carcassMat;
                 active = null;
                 props.onHover(null);
             }
@@ -119,15 +161,5 @@ export default function Cabinet3D(props: Props) {
         };
     }, [props]);
 
-    return (
-        <div
-            ref={mountRef}
-            style={{
-                width: "500px",
-                height: "300px",
-                border: "1px solid #666",
-                background: "#fff",
-            }}
-        />
-    );
+    return <div ref={mountRef} style={{ width: 500, height: 300, border: "1px solid #666" }} />;
 }

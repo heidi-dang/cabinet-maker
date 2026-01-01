@@ -2,22 +2,30 @@ import React, { useState } from "react";
 import { generateCutList } from "./cutListLogic";
 import Cabinet3D from "../../components/Cabinet3D";
 
-type HoverInfo = {
-    name: string;
-    size: string;
-} | null;
+type HoverInfo = { name: string; size: string } | null;
+
+const PRESETS = {
+    base: { width: 600, height: 720, depth: 560, shelves: 1 },
+    wall: { width: 600, height: 720, depth: 350, shelves: 2 },
+    tall: { width: 600, height: 2100, depth: 560, shelves: 4 },
+};
 
 export default function CutListPage() {
     const [hoverInfo, setHoverInfo] = useState<HoverInfo>(null);
+    const [preset, setPreset] = useState<keyof typeof PRESETS>("base");
 
     const [input, setInput] = useState({
-        width: 600,
-        height: 720,
-        depth: 560,
+        ...PRESETS.base,
         thickness: 18,
-        shelves: 1,
         back: true,
+        doors: true,
+        doorGap: 2,
     });
+
+    function applyPreset(p: keyof typeof PRESETS) {
+        setPreset(p);
+        setInput({ ...input, ...PRESETS[p] });
+    }
 
     const safe = {
         width: Math.max(1, input.width),
@@ -32,68 +40,55 @@ export default function CutListPage() {
         <div>
             <h1>Cabinet-Maker Toolkit</h1>
 
-            <section style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
+            <section style={{ display: "flex", gap: 24 }}>
                 <Cabinet3D
                     width={safe.width}
                     height={safe.height}
                     depth={safe.depth}
                     shelves={input.shelves}
                     showBack={input.back}
+                    doors={input.doors}
+                    doorGap={input.doorGap}
                     onHover={setHoverInfo}
                 />
 
-                <div
-                    style={{
-                        width: "240px",
-                        padding: "16px",
-                        border: "1px solid #ccc",
-                        background: "#f9fafb",
-                    }}
-                >
+                <div style={{ width: 260, border: "1px solid #ccc", padding: 16 }}>
                     <h3>Panel Info</h3>
-
                     {hoverInfo ? (
                         <>
-                            <p><strong>{hoverInfo.name}</strong></p>
-                            <p>Size: {hoverInfo.size}</p>
+                            <strong>{hoverInfo.name}</strong>
+                            <div>{hoverInfo.size}</div>
                         </>
                     ) : (
-                        <p style={{ color: "#666" }}>Hover a panel to see details</p>
+                        <em>Hover a panel</em>
                     )}
                 </div>
             </section>
 
-            <section className="form" style={{ marginTop: "24px" }}>
-                <label>Width (mm)</label>
-                <input type="number" value={input.width}
-                       onChange={e => setInput({ ...input, width: +e.target.value || 1 })} />
-
-                <label>Height (mm)</label>
-                <input type="number" value={input.height}
-                       onChange={e => setInput({ ...input, height: +e.target.value || 1 })} />
-
-                <label>Depth (mm)</label>
-                <input type="number" value={input.depth}
-                       onChange={e => setInput({ ...input, depth: +e.target.value || 1 })} />
-
-                <label>Shelves</label>
-                <input type="number" min={0} value={input.shelves}
-                       onChange={e => setInput({ ...input, shelves: +e.target.value || 0 })} />
+            <section style={{ marginTop: 24 }}>
+                <label>Cabinet type</label>
+                <select value={preset} onChange={e => applyPreset(e.target.value as any)}>
+                    <option value="base">Base cabinet</option>
+                    <option value="wall">Wall cabinet</option>
+                    <option value="tall">Tall cabinet</option>
+                </select>
 
                 <label>
-                    <input type="checkbox" checked={input.back}
-                           onChange={e => setInput({ ...input, back: e.target.checked })} />
-                    Back panel
+                    <input type="checkbox" checked={input.doors}
+                           onChange={e => setInput({ ...input, doors: e.target.checked })} />
+                    Doors
                 </label>
+
+                <label>Door gap (mm)</label>
+                <input type="number" value={input.doorGap}
+                       onChange={e => setInput({ ...input, doorGap: +e.target.value || 2 })} />
             </section>
 
             <section>
                 <h2>Cut List</h2>
                 <ul>
-                    {cutList.map(item => (
-                        <li key={item.name}>
-                            {item.name}: {item.size} × {item.qty}
-                        </li>
+                    {cutList.map(i => (
+                        <li key={i.name}>{i.name}: {i.size} × {i.qty}</li>
                     ))}
                 </ul>
             </section>
