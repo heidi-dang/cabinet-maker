@@ -21,28 +21,33 @@ export default function Cabinet3D({
     useEffect(() => {
         if (!mountRef.current) return;
 
-        // ---------- SCENE ----------
+        /* ================= SCENE ================= */
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xffffff);
 
         const camera = new THREE.PerspectiveCamera(45, 5 / 3, 0.1, 50);
-        camera.position.set(2, 1.6, 2);
-        camera.lookAt(0, 0.7, 0);
+        camera.position.set(2.4, 1.8, 2.4);
+        camera.lookAt(0, 0.8, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(500, 300);
         mountRef.current.appendChild(renderer.domElement);
 
         scene.add(new THREE.AmbientLight(0xffffff, 1));
-        const light = new THREE.DirectionalLight(0xffffff, 0.8);
-        light.position.set(4, 6, 4);
-        scene.add(light);
+        const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+        sun.position.set(6, 8, 6);
+        scene.add(sun);
 
-        // ---------- MATERIALS ----------
-        const panelMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb });
-        const highlightMat = new THREE.MeshStandardMaterial({ color: 0x93c5fd });
+        /* ================= MATERIALS ================= */
+        const normalMat = new THREE.MeshStandardMaterial({
+            color: 0xe5e7eb,
+        });
 
-        // ---------- SCALE ----------
+        const highlightMat = new THREE.MeshStandardMaterial({
+            color: 0xffeb3b, // CAD yellow
+        });
+
+        /* ================= SCALE ================= */
         const w = width / 1000;
         const h = height / 1000;
         const d = depth / 1000;
@@ -56,28 +61,35 @@ export default function Cabinet3D({
             x: number,
             y: number,
             z: number,
-            sizeLabel: string
+            label: string
         ) => {
-            const mesh = new THREE.Mesh(geo, panelMat);
+            const mesh = new THREE.Mesh(geo, normalMat);
             mesh.position.set(x, y, z);
-            mesh.userData = { name, sizeLabel };
+            mesh.userData = { name, label };
             scene.add(mesh);
             panels.push(mesh);
+
+            const edges = new THREE.LineSegments(
+                new THREE.EdgesGeometry(geo),
+                new THREE.LineBasicMaterial({ color: 0x000000 })
+            );
+            edges.position.copy(mesh.position);
+            scene.add(edges);
         };
 
-        // Cabinet panels
-        addPanel("Left Side",  new THREE.BoxGeometry(t, h, d), -w / 2, h / 2, 0, `${height} × ${depth} mm`);
-        addPanel("Right Side", new THREE.BoxGeometry(t, h, d),  w / 2, h / 2, 0, `${height} × ${depth} mm`);
-        addPanel("Top",        new THREE.BoxGeometry(w, t, d),  0, h, 0, `${width} × ${depth} mm`);
-        addPanel("Bottom",     new THREE.BoxGeometry(w, t, d),  0, 0, 0, `${width} × ${depth} mm`);
+        /* ================= CABINET ================= */
+        addPanel("LEFT SIDE",  new THREE.BoxGeometry(t, h, d), -w / 2, h / 2, 0, `${height} × ${depth} mm`);
+        addPanel("RIGHT SIDE", new THREE.BoxGeometry(t, h, d),  w / 2, h / 2, 0, `${height} × ${depth} mm`);
+        addPanel("TOP",        new THREE.BoxGeometry(w, t, d),  0, h, 0, `${width} × ${depth} mm`);
+        addPanel("BOTTOM",     new THREE.BoxGeometry(w, t, d),  0, 0, 0, `${width} × ${depth} mm`);
 
         if (showBack) {
-            addPanel("Back", new THREE.BoxGeometry(w, h, t), 0, h / 2, -d / 2, `${width} × ${height} mm`);
+            addPanel("BACK", new THREE.BoxGeometry(w, h, t), 0, h / 2, -d / 2, `${width} × ${height} mm`);
         }
 
         for (let i = 1; i <= shelves; i++) {
             addPanel(
-                `Shelf ${i}`,
+                `SHELF ${i}`,
                 new THREE.BoxGeometry(w - t * 2, t, d - t),
                 0,
                 (h / (shelves + 1)) * i,
@@ -86,15 +98,15 @@ export default function Cabinet3D({
             );
         }
 
-        // ---------- LABEL ----------
-        const label = makeLabel("");
-        label.visible = false;
-        scene.add(label);
+        /* ================= LABEL ================= */
+        const labelSprite = createLabel("");
+        labelSprite.visible = false;
+        scene.add(labelSprite);
 
-        // ---------- RAYCASTER ----------
+        /* ================= RAYCAST ================= */
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-        let lastHit: THREE.Mesh | null = null;
+        let active: THREE.Mesh | null = null;
 
         const onMove = (e: MouseEvent) => {
             const rect = renderer.domElement.getBoundingClientRect();
@@ -102,29 +114,28 @@ export default function Cabinet3D({
             mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
 
             raycaster.setFromCamera(mouse, camera);
-            const hits = raycaster.intersectObjects(panels);
+            const hit = raycaster.intersectObjects(panels)[0];
 
-            if (hits.length) {
-                const hit = hits[0].object as THREE.Mesh;
-                if (lastHit && lastHit !== hit) {
-                    (lastHit.material as THREE.Material) = panelMat;
-                }
-                hit.material = highlightMat;
-                label.visible = true;
-                label.position.copy(hit.position).add(new THREE.Vector3(0, 0.15, 0));
-                updateLabel(label, `${hit.userData.name}\n${hit.userData.sizeLabel}`);
-                lastHit = hit;
+            if (hit) {
+                const mesh = hit.object as THREE.Mesh;
+                if (active && active !== mesh) active.material = normalMat;
+                mesh.material = highlightMat;
+                active = mesh;
+
+                labelSprite.visible = true;
+                labelSprite.position.copy(mesh.position).add(new THREE.Vector3(0, 0.25, 0));
+                updateLabel(labelSprite, mesh.userData.name, mesh.userData.label);
+                labelSprite.quaternion.copy(camera.quaternion);
             } else {
-                if (lastHit) {
-                    lastHit.material = panelMat;
-                    lastHit = null;
-                }
-                label.visible = false;
+                if (active) active.material = normalMat;
+                active = null;
+                labelSprite.visible = false;
             }
         };
 
         renderer.domElement.addEventListener("mousemove", onMove);
 
+        /* ================= RENDER LOOP ================= */
         const animate = () => {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
@@ -144,41 +155,41 @@ export default function Cabinet3D({
             style={{
                 width: "500px",
                 height: "300px",
-                border: "1px solid #999",
+                border: "1px solid #666",
+                background: "#fff",
             }}
         />
     );
 }
 
-// ---------- LABEL HELPERS ----------
-function makeLabel(text: string) {
-    const c = document.createElement("canvas");
-    c.width = 256;
-    c.height = 128;
-    const ctx = c.getContext("2d")!;
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, c.width, c.height);
-    ctx.fillStyle = "#000000";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, c.width / 2, c.height / 2);
-    const tex = new THREE.CanvasTexture(c);
-    return new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+/* ================= LABEL HELPERS ================= */
+function createLabel(text: string) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 300;
+    canvas.height = 120;
+    const texture = new THREE.CanvasTexture(canvas);
+    return new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
 }
 
-function updateLabel(sprite: THREE.Sprite, text: string) {
+function updateLabel(sprite: THREE.Sprite, title: string, size: string) {
     const canvas = sprite.material.map!.image as HTMLCanvasElement;
     const ctx = canvas.getContext("2d")!;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "#ffffff";
+
+    ctx.fillStyle = "#ffeb3b";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 4;
+    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+
     ctx.fillStyle = "#000000";
-    ctx.font = "16px Arial";
+    ctx.font = "bold 22px Arial";
     ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    text.split("\n").forEach((line, i) => {
-        ctx.fillText(line, canvas.width / 2, canvas.height / 2 + i * 18);
-    });
+    ctx.fillText(title, canvas.width / 2, 42);
+
+    ctx.font = "20px Arial";
+    ctx.fillText(size, canvas.width / 2, 78);
+
     sprite.material.map!.needsUpdate = true;
+    sprite.scale.set(0.9, 0.36, 1);
 }
