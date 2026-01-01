@@ -5,6 +5,7 @@ import Cabinet3D from "../../components/Cabinet3D";
 export default function CutListPage() {
     const [exploded, setExploded] = useState(false);
     const [doorsOpen, setDoorsOpen] = useState(false);
+    const [showDimensions, setShowDimensions] = useState(true);
 
     const [input, setInput] = useState({
         width: 600,
@@ -65,6 +66,15 @@ export default function CutListPage() {
                 <label>Shelves</label>
                 <input type="number" min={0} value={input.shelves}
                        onChange={e => setInput({ ...input, shelves: +e.target.value || 0 })} />
+
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={showDimensions}
+                        onChange={(e) => setShowDimensions(e.target.checked)}
+                    />
+                    Show dimensions
+                </label>
 
                 <label>
                     <input type="checkbox" checked={input.back}

@@ -7,6 +7,7 @@ type Props = {
     depth: number;
     shelves: number;
     showBack: boolean;
+    showDimensions: boolean;
 };
 
 export default function Cabinet3D({
@@ -15,131 +16,98 @@ export default function Cabinet3D({
                                       depth,
                                       shelves,
                                       showBack,
+                                      showDimensions,
                                   }: Props) {
     const mountRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (!mountRef.current) return;
 
-        // ---------- SCENE ----------
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf5f5f5);
+        scene.background = new THREE.Color(0xffffff);
 
         const camera = new THREE.PerspectiveCamera(45, 5 / 3, 0.1, 50);
-        camera.position.set(2, 1.5, 2);
+        camera.position.set(2, 1.6, 2);
         camera.lookAt(0, 0.7, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(500, 300);
         mountRef.current.appendChild(renderer.domElement);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-        const light = new THREE.DirectionalLight(0xffffff, 0.5);
-        light.position.set(3, 4, 5);
+        scene.add(new THREE.AmbientLight(0xffffff, 1));
+        const light = new THREE.DirectionalLight(0xffffff, 0.8);
+        light.position.set(4, 6, 4);
         scene.add(light);
 
-        // ---------- SCALE ----------
+        const panelMat = new THREE.MeshStandardMaterial({
+            color: 0xe5e7eb,   // light grey (easy to see)
+        });
+
+        const edgeMat = new THREE.LineBasicMaterial({
+            color: 0x000000,   // black outlines
+        });
+
         const w = width / 1000;
         const h = height / 1000;
         const d = depth / 1000;
         const t = 0.018;
 
-        const material = new THREE.MeshStandardMaterial({ color: 0x9b6a3d });
+        const group = new THREE.Group();
+        scene.add(group);
 
-        const cabinetGroup = new THREE.Group();
-        scene.add(cabinetGroup);
-
-        const addBox = (
-            x: number,
-            y: number,
-            z: number,
-            sx: number,
-            sy: number,
-            sz: number
-        ) => {
-            const mesh = new THREE.Mesh(
-                new THREE.BoxGeometry(sx, sy, sz),
-                material
-            );
+        const addPanel = (geo: THREE.BoxGeometry, x: number, y: number, z: number) => {
+            const mesh = new THREE.Mesh(geo, panelMat);
             mesh.position.set(x, y, z);
-            cabinetGroup.add(mesh);
+            group.add(mesh);
+
+            const edges = new THREE.EdgesGeometry(geo);
+            const line = new THREE.LineSegments(edges, edgeMat);
+            line.position.copy(mesh.position);
+            group.add(line);
         };
 
-        // Panels
-        addBox(-w / 2, h / 2, 0, t, h, d);
-        addBox(w / 2, h / 2, 0, t, h, d);
-        addBox(0, h, 0, w, t, d);
-        addBox(0, 0, 0, w, t, d);
+        addPanel(new THREE.BoxGeometry(t, h, d), -w / 2, h / 2, 0);
+        addPanel(new THREE.BoxGeometry(t, h, d),  w / 2, h / 2, 0);
+        addPanel(new THREE.BoxGeometry(w, t, d),  0, h, 0);
+        addPanel(new THREE.BoxGeometry(w, t, d),  0, 0, 0);
 
         if (showBack) {
-            addBox(0, h / 2, -d / 2, w, h, t);
+            addPanel(new THREE.BoxGeometry(w, h, t), 0, h / 2, -d / 2);
         }
 
         for (let i = 1; i <= shelves; i++) {
-            addBox(0, (h / (shelves + 1)) * i, 0, w - t * 2, t, d - t);
+            addPanel(
+                new THREE.BoxGeometry(w - t * 2, t, d - t),
+                0,
+                (h / (shelves + 1)) * i,
+                0
+            );
         }
 
-        // ---------- DIMENSION LABELS ----------
-        const labels: THREE.Sprite[] = [];
+        // Dimension labels (global toggle)
+        if (showDimensions) {
+            const label = makeLabel(`${width} × ${height} × ${depth} mm`);
+            label.position.set(0, -0.25, d / 2 + 0.4);
+            scene.add(label);
+        }
 
-        const makeLabel = (text: string) => {
-            const c = document.createElement("canvas");
-            c.width = 256;
-            c.height = 64;
-            const ctx = c.getContext("2d")!;
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, c.width, c.height);
-            ctx.fillStyle = "#000000";
-            ctx.font = "20px Arial";
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(text, c.width / 2, c.height / 2);
-            const tex = new THREE.CanvasTexture(c);
-            const sprite = new THREE.Sprite(
-                new THREE.SpriteMaterial({ map: tex })
-            );
-            sprite.scale.set(0.8, 0.2, 1);
-            sprite.visible = false;
-            scene.add(sprite);
-            labels.push(sprite);
-            return sprite;
-        };
-
-        const wLabel = makeLabel(`${width} mm`);
-        wLabel.position.set(0, -0.15, d / 2 + 0.3);
-
-        const hLabel = makeLabel(`${height} mm`);
-        hLabel.position.set(w / 2 + 0.3, h / 2, 0);
-
-        const dLabel = makeLabel(`${depth} mm`);
-        dLabel.position.set(0, -0.25, 0);
-
-        // ---------- INTERACTION ----------
-        let dragging = false;
+        let drag = false;
         let lastX = 0;
 
         const down = (e: MouseEvent) => {
-            dragging = true;
+            drag = true;
             lastX = e.clientX;
         };
-
-        const up = () => (dragging = false);
-
+        const up = () => (drag = false);
         const move = (e: MouseEvent) => {
-            if (dragging) {
-                scene.rotation.y += (e.clientX - lastX) * 0.005;
-                lastX = e.clientX;
-            }
+            if (!drag) return;
+            group.rotation.y += (e.clientX - lastX) * 0.005;
+            lastX = e.clientX;
         };
-
-        const enter = () => labels.forEach((l) => (l.visible = true));
-        const leave = () => labels.forEach((l) => (l.visible = false));
 
         renderer.domElement.addEventListener("mousedown", down);
         window.addEventListener("mouseup", up);
         window.addEventListener("mousemove", move);
-        renderer.domElement.addEventListener("mouseenter", enter);
-        renderer.domElement.addEventListener("mouseleave", leave);
 
         const animate = () => {
             requestAnimationFrame(animate);
@@ -153,7 +121,7 @@ export default function Cabinet3D({
             window.removeEventListener("mouseup", up);
             window.removeEventListener("mousemove", move);
         };
-    }, [width, height, depth, shelves, showBack]);
+    }, [width, height, depth, shelves, showBack, showDimensions]);
 
     return (
         <div
@@ -161,9 +129,27 @@ export default function Cabinet3D({
             style={{
                 width: "500px",
                 height: "300px",
-                border: "1px solid #ccc",
-                marginBottom: "24px",
+                border: "1px solid #999",
+                background: "#fff",
             }}
         />
     );
+}
+
+function makeLabel(text: string) {
+    const c = document.createElement("canvas");
+    c.width = 256;
+    c.height = 64;
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    ctx.fillStyle = "#000000";
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, c.width / 2, c.height / 2);
+    const tex = new THREE.CanvasTexture(c);
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex }));
+    sprite.scale.set(0.8, 0.2, 1);
+    return sprite;
 }
