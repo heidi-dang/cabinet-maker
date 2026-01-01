@@ -39,13 +39,8 @@ export default function Cabinet3D({
         scene.add(sun);
 
         /* ================= MATERIALS ================= */
-        const normalMat = new THREE.MeshStandardMaterial({
-            color: 0xe5e7eb,
-        });
-
-        const highlightMat = new THREE.MeshStandardMaterial({
-            color: 0xffeb3b, // CAD yellow
-        });
+        const normalMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb });
+        const highlightMat = new THREE.MeshStandardMaterial({ color: 0xffeb3b });
 
         /* ================= SCALE ================= */
         const w = width / 1000;
@@ -99,7 +94,7 @@ export default function Cabinet3D({
         }
 
         /* ================= LABEL ================= */
-        const labelSprite = createLabel("");
+        const labelSprite = createLabel();
         labelSprite.visible = false;
         scene.add(labelSprite);
 
@@ -118,14 +113,27 @@ export default function Cabinet3D({
 
             if (hit) {
                 const mesh = hit.object as THREE.Mesh;
-                if (active && active !== mesh) active.material = normalMat;
+
+                if (active && active !== mesh) {
+                    active.material = normalMat;
+                }
+
                 mesh.material = highlightMat;
                 active = mesh;
 
-                labelSprite.visible = true;
-                labelSprite.position.copy(mesh.position).add(new THREE.Vector3(0, 0.25, 0));
-                updateLabel(labelSprite, mesh.userData.name, mesh.userData.label);
+                // ---- CAD-CORRECT LABEL OFFSET ----
+                const toCamera = new THREE.Vector3()
+                    .subVectors(camera.position, mesh.position)
+                    .normalize();
+
+                labelSprite.position
+                    .copy(mesh.position)
+                    .add(toCamera.multiplyScalar(0.35))
+                    .add(new THREE.Vector3(0, 0.15, 0));
+
                 labelSprite.quaternion.copy(camera.quaternion);
+                updateLabel(labelSprite, mesh.userData.name, mesh.userData.label);
+                labelSprite.visible = true;
             } else {
                 if (active) active.material = normalMat;
                 active = null;
@@ -135,7 +143,6 @@ export default function Cabinet3D({
 
         renderer.domElement.addEventListener("mousemove", onMove);
 
-        /* ================= RENDER LOOP ================= */
         const animate = () => {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
@@ -163,7 +170,7 @@ export default function Cabinet3D({
 }
 
 /* ================= LABEL HELPERS ================= */
-function createLabel(text: string) {
+function createLabel() {
     const canvas = document.createElement("canvas");
     canvas.width = 300;
     canvas.height = 120;
@@ -178,6 +185,7 @@ function updateLabel(sprite: THREE.Sprite, title: string, size: string) {
 
     ctx.fillStyle = "#ffeb3b";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
     ctx.strokeStyle = "#000000";
     ctx.lineWidth = 4;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
@@ -185,10 +193,10 @@ function updateLabel(sprite: THREE.Sprite, title: string, size: string) {
     ctx.fillStyle = "#000000";
     ctx.font = "bold 22px Arial";
     ctx.textAlign = "center";
-    ctx.fillText(title, canvas.width / 2, 42);
+    ctx.fillText(title, canvas.width / 2, 44);
 
     ctx.font = "20px Arial";
-    ctx.fillText(size, canvas.width / 2, 78);
+    ctx.fillText(size, canvas.width / 2, 84);
 
     sprite.material.map!.needsUpdate = true;
     sprite.scale.set(0.9, 0.36, 1);
