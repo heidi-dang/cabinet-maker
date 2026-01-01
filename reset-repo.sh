@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ===== CONFIG =====
-REPO_DIR="$HOME/woodworking"
+REPO_DIR="$HOME/cabinet-maker"
 REMOTE="origin"
 BRANCH="master"   # change to 'main' if needed
 # ==================

@@ -2,12 +2,12 @@
 set -euo pipefail
 
 ### ===== CONFIG =====
-REPO_URL="https://github.com/nguyenhhluong/woodworking.git"
-REPO_DIR="$HOME/woodworking"
+REPO_URL="https://github.com/heidi-dang/cabinet-maker.git"
+REPO_DIR="$HOME/cabinet-maker"
 NODE_VERSION="18"
 ### ==================
 
-echo "========== Woodworking 1-Click Build =========="
+echo "========== cabinet-maker 1-Click Build =========="
 
 echo "==> Updating system"
 sudo apt-get update -y

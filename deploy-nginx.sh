@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ### ===== CONFIG =====
-APP_NAME="woodworking"
-APP_DIR="$HOME/woodworking"
+APP_NAME="cabinet-maker"
+APP_DIR="$HOME/cabinet-maker"
 WEB_ROOT="/var/www/$APP_NAME"
 NGINX_CONF="/etc/nginx/sites-available/$APP_NAME"
 ### ==================
