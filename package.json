@@ -18,6 +18,7 @@
     "parcel-namer-hashless": "^1.0.7"
   },
   "scripts": {
+    "dev": "npx parcel",
     "prebuild": "rimraf dist",
     "start": "parcel",
     "build": "parcel build --no-content-hash --public-url ./"
