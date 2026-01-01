@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { generateCutList } from "./cutListLogic";
-import Cabinet3D from "../../../components/Cabinet3D";
+import Cabinet3D from "../../components/Cabinet3D";
 
 export default function CutListPage() {
     const [input, setInput] = useState({
