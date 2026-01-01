@@ -193,6 +193,7 @@ sudo ./deploy-nginx.sh
 
 ---
 
+---
 ## 10. Common Issues & Fixes
 
 | Problem             | Solution                             |
@@ -213,16 +214,7 @@ sudo ./deploy-nginx.sh
 
 ---
 
-## 12. Support
 
-If you need:
-
-* Windows `.bat` version
-* Docker build
-* GitHub Actions CI/CD
-* Auto‑deploy on git push
-
-Request it explicitly and it will be generated cleanly.
 
 ---
 
