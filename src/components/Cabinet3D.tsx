@@ -21,6 +21,7 @@ export default function Cabinet3D({
     useEffect(() => {
         if (!mountRef.current) return;
 
+        // ---------- SCENE ----------
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf5f5f5);
 
@@ -37,6 +38,7 @@ export default function Cabinet3D({
         light.position.set(3, 4, 5);
         scene.add(light);
 
+        // ---------- SCALE ----------
         const w = width / 1000;
         const h = height / 1000;
         const d = depth / 1000;
@@ -44,15 +46,28 @@ export default function Cabinet3D({
 
         const material = new THREE.MeshStandardMaterial({ color: 0x9b6a3d });
 
-        const addBox = (x: number, y: number, z: number, sx: number, sy: number, sz: number) => {
-            const m = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
-            m.position.set(x, y, z);
-            scene.add(m);
+        const cabinetGroup = new THREE.Group();
+        scene.add(cabinetGroup);
+
+        const addBox = (
+            x: number,
+            y: number,
+            z: number,
+            sx: number,
+            sy: number,
+            sz: number
+        ) => {
+            const mesh = new THREE.Mesh(
+                new THREE.BoxGeometry(sx, sy, sz),
+                material
+            );
+            mesh.position.set(x, y, z);
+            cabinetGroup.add(mesh);
         };
 
         // Panels
         addBox(-w / 2, h / 2, 0, t, h, d);
-        addBox( w / 2, h / 2, 0, t, h, d);
+        addBox(w / 2, h / 2, 0, t, h, d);
         addBox(0, h, 0, w, t, d);
         addBox(0, 0, 0, w, t, d);
 
@@ -60,11 +75,46 @@ export default function Cabinet3D({
             addBox(0, h / 2, -d / 2, w, h, t);
         }
 
-        // Shelves
         for (let i = 1; i <= shelves; i++) {
             addBox(0, (h / (shelves + 1)) * i, 0, w - t * 2, t, d - t);
         }
 
+        // ---------- DIMENSION LABELS ----------
+        const labels: THREE.Sprite[] = [];
+
+        const makeLabel = (text: string) => {
+            const c = document.createElement("canvas");
+            c.width = 256;
+            c.height = 64;
+            const ctx = c.getContext("2d")!;
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, c.width, c.height);
+            ctx.fillStyle = "#000000";
+            ctx.font = "20px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, c.width / 2, c.height / 2);
+            const tex = new THREE.CanvasTexture(c);
+            const sprite = new THREE.Sprite(
+                new THREE.SpriteMaterial({ map: tex })
+            );
+            sprite.scale.set(0.8, 0.2, 1);
+            sprite.visible = false;
+            scene.add(sprite);
+            labels.push(sprite);
+            return sprite;
+        };
+
+        const wLabel = makeLabel(`${width} mm`);
+        wLabel.position.set(0, -0.15, d / 2 + 0.3);
+
+        const hLabel = makeLabel(`${height} mm`);
+        hLabel.position.set(w / 2 + 0.3, h / 2, 0);
+
+        const dLabel = makeLabel(`${depth} mm`);
+        dLabel.position.set(0, -0.25, 0);
+
+        // ---------- INTERACTION ----------
         let dragging = false;
         let lastX = 0;
 
@@ -76,14 +126,20 @@ export default function Cabinet3D({
         const up = () => (dragging = false);
 
         const move = (e: MouseEvent) => {
-            if (!dragging) return;
-            scene.rotation.y += (e.clientX - lastX) * 0.005;
-            lastX = e.clientX;
+            if (dragging) {
+                scene.rotation.y += (e.clientX - lastX) * 0.005;
+                lastX = e.clientX;
+            }
         };
+
+        const enter = () => labels.forEach((l) => (l.visible = true));
+        const leave = () => labels.forEach((l) => (l.visible = false));
 
         renderer.domElement.addEventListener("mousedown", down);
         window.addEventListener("mouseup", up);
         window.addEventListener("mousemove", move);
+        renderer.domElement.addEventListener("mouseenter", enter);
+        renderer.domElement.addEventListener("mouseleave", leave);
 
         const animate = () => {
             requestAnimationFrame(animate);
