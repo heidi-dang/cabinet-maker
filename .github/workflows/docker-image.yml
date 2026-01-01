@@ -1,0 +1,79 @@
+name: Build and Deploy Cabinet Maker
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # -------------------------
+      # Checkout
+      # -------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -------------------------
+      # Ensure Docker
+      # -------------------------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # -------------------------
+      # Build with cache
+      # -------------------------
+      - name: Build Docker image
+        run: |
+          docker build \
+            --tag cabinet-maker:latest \
+            .
+
+      # -------------------------
+      # Save image
+      # -------------------------
+      - name: Save Docker image
+        run: |
+          docker save cabinet-maker:latest | gzip > cabinet-maker.tar.gz
+
+      # -------------------------
+      # Upload to server
+      # -------------------------
+      - name: Upload image to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: cabinet-maker.tar.gz
+          target: /root
+          timeout: 60s
+
+      # -------------------------
+      # Deploy on server
+      # -------------------------
+      - name: Deploy container
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s
+          script: |
+            set -e
+
+            docker load < /root/cabinet-maker.tar.gz
+
+            docker stop cabinet-maker || true
+            docker rm cabinet-maker || true
+
+            docker run -d \
+              --restart unless-stopped \
+              -p 80:80 \
+              --name cabinet-maker \
+              cabinet-maker:latest
+
+            sleep 3
+            docker ps | grep cabinet-maker
