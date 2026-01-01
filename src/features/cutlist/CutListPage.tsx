@@ -9,98 +9,78 @@ export default function CutListPage() {
         thickness: 18,
     });
 
-    const cutList = generateCutList(input);
+    const safeInput = {
+        width: Math.max(1, input.width),
+        height: Math.max(1, input.height),
+        depth: Math.max(1, input.depth),
+        thickness: Math.max(1, input.thickness),
+    };
+
+    const cutList = generateCutList(safeInput);
 
     return (
         <div>
-            {/* INTRODUCTION */}
-            <section style={{ marginBottom: "32px" }}>
+            <section>
                 <h1>Cabinet-Maker Toolkit</h1>
 
                 <p>
-                    This app is a practical toolkit designed for cabinet makers, joiners,
-                    and installers. It helps you quickly calculate cut sizes, estimate
-                    materials, and avoid common mistakes on site.
+                    Use this app to quickly generate cut lists and estimate materials
+                    for cabinetry and joinery work.
                 </p>
 
-                <h3>How to use this app</h3>
                 <ol>
-                    <li>
-                        Start on the <strong>Cut List</strong> page (this page).
-                    </li>
-                    <li>
-                        Enter your cabinet dimensions in millimetres.
-                    </li>
-                    <li>
-                        The cut list will update automatically.
-                    </li>
-                    <li>
-                        Use the sidebar to access the Material Estimator and Fixing
-                        Reference.
-                    </li>
+                    <li>Enter cabinet dimensions below</li>
+                    <li>Results update instantly</li>
+                    <li>Use the sidebar for more tools</li>
                 </ol>
-
-                <p>
-                    This tool is designed to be fast, simple, and reliable for daily site
-                    work.
-                </p>
             </section>
 
-            <hr />
-
-            {/* CUT LIST TOOL */}
             <section>
                 <h2>Cut List Generator</h2>
 
-                <div>
+                <div className="form">
                     <label>Width (mm)</label>
                     <input
                         type="number"
                         value={input.width}
                         onChange={(e) =>
-                            setInput({ ...input, width: Number(e.target.value) })
+                            setInput({ ...input, width: Number(e.target.value) || 1 })
                         }
                     />
-                </div>
 
-                <div>
                     <label>Height (mm)</label>
                     <input
                         type="number"
                         value={input.height}
                         onChange={(e) =>
-                            setInput({ ...input, height: Number(e.target.value) })
+                            setInput({ ...input, height: Number(e.target.value) || 1 })
                         }
                     />
-                </div>
 
-                <div>
                     <label>Depth (mm)</label>
                     <input
                         type="number"
                         value={input.depth}
                         onChange={(e) =>
-                            setInput({ ...input, depth: Number(e.target.value) })
+                            setInput({ ...input, depth: Number(e.target.value) || 1 })
                         }
                     />
-                </div>
 
-                <div>
                     <label>Material Thickness (mm)</label>
                     <input
                         type="number"
                         value={input.thickness}
                         onChange={(e) =>
-                            setInput({ ...input, thickness: Number(e.target.value) })
+                            setInput({ ...input, thickness: Number(e.target.value) || 1 })
                         }
                     />
                 </div>
 
-                <h3>Cut List Result</h3>
+                <h3>Cut List</h3>
                 <ul>
                     {cutList.map((item) => (
                         <li key={item.name}>
-                            {item.name}: {item.size} (x{item.qty})
+                            {item.name}: {item.size} (×{item.qty})
                         </li>
                     ))}
                 </ul>
