@@ -1,7 +1,7 @@
 {
-  "name": "woodworking",
+  "name": "cabinet-maker",
   "version": "1.0.0",
-  "description": "Different woodworking tools",
+  "description": "Different cabinet-maker tools",
   "source": "src/index.html",
   "dependencies": {
     "react": "^19.1.1",
@@ -24,12 +24,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zVolodymyr/woodworking.git"
+    "url": "git+https://github.com/zVolodymyr/cabinet-maker.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/zVolodymyr/woodworking/issues"
+    "url": "https://github.com/zVolodymyr/cabinet-maker/issues"
   },
-  "homepage": "https://github.com/zVolodymyr/woodworking#readme"
+  "homepage": "https://github.com/zVolodymyr/cabinet-maker#readme"
 }
