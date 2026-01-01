@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { generateCutList } from "./cutListLogic";
+import Cabinet3D from "../../components/Cabinet3D";
 
 export default function CutListPage() {
     const [input, setInput] = useState({
@@ -22,17 +23,19 @@ export default function CutListPage() {
         <div>
             <section>
                 <h1>Cabinet-Maker Toolkit</h1>
-
                 <p>
-                    Use this app to quickly generate cut lists and estimate materials
-                    for cabinetry and joinery work.
+                    Enter cabinet dimensions to generate a cut list and preview the cabinet
+                    in 3D.
                 </p>
+            </section>
 
-                <ol>
-                    <li>Enter cabinet dimensions below</li>
-                    <li>Results update instantly</li>
-                    <li>Use the sidebar for more tools</li>
-                </ol>
+            <section>
+                <h2>3D Cabinet Preview</h2>
+                <Cabinet3D
+                    width={safeInput.width}
+                    height={safeInput.height}
+                    depth={safeInput.depth}
+                />
             </section>
 
             <section>
