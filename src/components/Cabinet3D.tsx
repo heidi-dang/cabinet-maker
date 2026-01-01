@@ -49,35 +49,33 @@ export default function Cabinet3D({
         const h = height / 1000;
         const d = depth / 1000;
         const t = 0.018;
-
         const explode = exploded ? 0.15 : 0;
 
-        // Panels
-        const panels: THREE.Mesh[] = [];
+        const parts: THREE.Mesh[] = [];
 
+        // Side panels
         const left = new THREE.Mesh(new THREE.BoxGeometry(t, h, d), mat);
         left.position.set(-w / 2 - explode, h / 2, 0);
-        panels.push(left);
+        parts.push(left);
 
         const right = new THREE.Mesh(new THREE.BoxGeometry(t, h, d), mat);
         right.position.set(w / 2 + explode, h / 2, 0);
-        panels.push(right);
+        parts.push(right);
 
+        // Top & bottom
         const top = new THREE.Mesh(new THREE.BoxGeometry(w, t, d), mat);
         top.position.set(0, h + explode, 0);
-        panels.push(top);
+        parts.push(top);
 
         const bottom = new THREE.Mesh(new THREE.BoxGeometry(w, t, d), mat);
         bottom.position.set(0, -explode, 0);
-        panels.push(bottom);
+        parts.push(bottom);
 
+        // Back panel
         if (showBack) {
-            const back = new THREE.Mesh(
-                new THREE.BoxGeometry(w, h, t),
-                mat
-            );
+            const back = new THREE.Mesh(new THREE.BoxGeometry(w, h, t), mat);
             back.position.set(0, h / 2, -d / 2 - explode);
-            panels.push(back);
+            parts.push(back);
         }
 
         // Shelves
@@ -86,21 +84,30 @@ export default function Cabinet3D({
                 new THREE.BoxGeometry(w - t * 2, t, d - t),
                 mat
             );
-            shelf.position.set(
-                0,
-                (h / (shelves + 1)) * i,
-                0
-            );
-            panels.push(shelf);
+            shelf.position.set(0, (h / (shelves + 1)) * i, 0);
+            parts.push(shelf);
         }
 
-        panels.forEach((p) => scene.add(p));
+        parts.forEach((p) => scene.add(p));
 
+        // Rotation controls
         let dragging = false;
         let lastX = 0;
 
-        const down = (e: MouseEvent) => {
+        const onMouseDown = (e: MouseEvent) => {
             dragging = true;
             lastX = e.clientX;
         };
-        const up = (
+
+        const onMouseUp = () => {
+            dragging = false;
+        };
+
+        const onMouseMove = (e: MouseEvent) => {
+            if (!dragging) return;
+            scene.rotation.y += (e.clientX - lastX) * 0.005;
+            lastX = e.clientX;
+        };
+
+        renderer.domElement.addEventListener("mousedown", onMouseDown);
+        window.addEventListener("mouseup", onMouseUp
