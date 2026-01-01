@@ -3,3 +3,6 @@ package-lock.json
 .parcel-cache
 .env
 .env.local
+cabinet-maker-deploy
+cabinet-maker-deploy.pub
+phase1-setup.sh
