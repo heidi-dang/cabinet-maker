@@ -4,7 +4,7 @@ set -euo pipefail
 # ========= CONFIG =========
 APP_NAME="cabinet-maker"
 REPO_DIR="$HOME/cabinet-maker"
-BRANCH="main"
+BRANCH="master"
 WEB_ROOT="/var/www/$APP_NAME"
 NODE_VERSION="18"
 # ==========================
@@ -22,7 +22,6 @@ git clean -fd
 
 echo "==> Checking Node.js"
 if ! command -v node >/dev/null 2>&1; then
-  echo "Installing Node.js $NODE_VERSION"
   curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
   sudo apt install -y nodejs
 fi
@@ -53,5 +52,4 @@ sudo systemctl reload nginx
 
 echo "======================================"
 echo " DEPLOYMENT COMPLETE"
-echo " Live site updated successfully"
 echo "======================================"
