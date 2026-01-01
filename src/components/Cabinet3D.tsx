@@ -5,102 +5,102 @@ interface Props {
     width: number;
     height: number;
     depth: number;
+    shelves: number;
+    showBack: boolean;
+    exploded: boolean;
 }
 
-export default function Cabinet3D({ width, height, depth }: Props) {
+export default function Cabinet3D({
+                                      width,
+                                      height,
+                                      depth,
+                                      shelves,
+                                      showBack,
+                                      exploded,
+                                  }: Props) {
     const mountRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (!mountRef.current) return;
 
+        // Scene
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0xf5f6f8);
 
-        const camera = new THREE.PerspectiveCamera(
-            45,
-            mountRef.current.clientWidth / 300,
-            0.1,
-            1000
-        );
+        // Camera
+        const camera = new THREE.PerspectiveCamera(45, 1.6, 0.1, 100);
+        camera.position.set(1.8, 1.6, 1.8);
+        camera.lookAt(0, 0.6, 0);
 
+        // Renderer
         const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(mountRef.current.clientWidth, 300);
+        renderer.setSize(500, 300);
         mountRef.current.appendChild(renderer.domElement);
 
         // Lights
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-        scene.add(ambientLight);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+        const light = new THREE.DirectionalLight(0xffffff, 0.6);
+        light.position.set(3, 5, 4);
+        scene.add(light);
 
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
+        const mat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
 
-        // Cabinet box (scaled to meters)
-        const geometry = new THREE.BoxGeometry(
-            width / 1000,
-            height / 1000,
-            depth / 1000
-        );
+        const w = width / 1000;
+        const h = height / 1000;
+        const d = depth / 1000;
+        const t = 0.018;
 
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x8b5a2b,
-        });
+        const explode = exploded ? 0.15 : 0;
 
-        const cabinet = new THREE.Mesh(geometry, material);
-        scene.add(cabinet);
+        // Panels
+        const panels: THREE.Mesh[] = [];
 
-        camera.position.set(1.5, 1.2, 1.5);
-        camera.lookAt(0, 0, 0);
+        const left = new THREE.Mesh(new THREE.BoxGeometry(t, h, d), mat);
+        left.position.set(-w / 2 - explode, h / 2, 0);
+        panels.push(left);
 
-        let isDragging = false;
+        const right = new THREE.Mesh(new THREE.BoxGeometry(t, h, d), mat);
+        right.position.set(w / 2 + explode, h / 2, 0);
+        panels.push(right);
+
+        const top = new THREE.Mesh(new THREE.BoxGeometry(w, t, d), mat);
+        top.position.set(0, h + explode, 0);
+        panels.push(top);
+
+        const bottom = new THREE.Mesh(new THREE.BoxGeometry(w, t, d), mat);
+        bottom.position.set(0, -explode, 0);
+        panels.push(bottom);
+
+        if (showBack) {
+            const back = new THREE.Mesh(
+                new THREE.BoxGeometry(w, h, t),
+                mat
+            );
+            back.position.set(0, h / 2, -d / 2 - explode);
+            panels.push(back);
+        }
+
+        // Shelves
+        for (let i = 1; i <= shelves; i++) {
+            const shelf = new THREE.Mesh(
+                new THREE.BoxGeometry(w - t * 2, t, d - t),
+                mat
+            );
+            shelf.position.set(
+                0,
+                (h / (shelves + 1)) * i,
+                0
+            );
+            panels.push(shelf);
+        }
+
+        panels.forEach((p) => scene.add(p));
+
+        let dragging = false;
         let lastX = 0;
 
-        const onMouseDown = (e: MouseEvent) => {
-            isDragging = true;
+        const down = (e: MouseEvent) => {
+            dragging = true;
             lastX = e.clientX;
         };
-
-        const onMouseUp = () => {
-            isDragging = false;
-        };
-
-        const onMouseMove = (e: MouseEvent) => {
-            if (!isDragging) return;
-            const delta = e.clientX - lastX;
-            cabinet.rotation.y += delta * 0.005;
-            lastX = e.clientX;
-        };
-
-        renderer.domElement.addEventListener("mousedown", onMouseDown);
-        window.addEventListener("mouseup", onMouseUp);
-        window.addEventListener("mousemove", onMouseMove);
-
-        const animate = () => {
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
-        };
-        animate();
-
-        return () => {
-            renderer.domElement.removeEventListener("mousedown", onMouseDown);
-            window.removeEventListener("mouseup", onMouseUp);
-            window.removeEventListener("mousemove", onMouseMove);
-            mountRef.current?.removeChild(renderer.domElement);
-            renderer.dispose();
-        };
-    }, [width, height, depth]);
-
-    return (
-        <div
-            ref={mountRef}
-            style={{
-                width: "100%",
-                maxWidth: "500px",
-                height: "300px",
-                marginBottom: "24px",
-                border: "1px solid #ddd",
-                background: "#f5f6f8",
-            }}
-        />
-    );
-}
+        const up = (

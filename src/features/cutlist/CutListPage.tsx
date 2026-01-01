@@ -3,43 +3,67 @@ import { generateCutList } from "./cutListLogic";
 import Cabinet3D from "../../components/Cabinet3D";
 
 export default function CutListPage() {
+    const [type, setType] = useState<"base" | "wall">("base");
+    const [exploded, setExploded] = useState(false);
+
+    const presets = {
+        base: { width: 600, height: 720, depth: 560, shelves: 1 },
+        wall: { width: 600, height: 720, depth: 350, shelves: 2 },
+    };
+
     const [input, setInput] = useState({
-        width: 600,
-        height: 720,
-        depth: 560,
+        width: presets.base.width,
+        height: presets.base.height,
+        depth: presets.base.depth,
         thickness: 18,
+        shelves: presets.base.shelves,
+        back: true,
     });
 
-    const safeInput = {
+    const safe = {
         width: Math.max(1, input.width),
         height: Math.max(1, input.height),
         depth: Math.max(1, input.depth),
         thickness: Math.max(1, input.thickness),
     };
 
-    const cutList = generateCutList(safeInput);
+    const cutList = generateCutList(safe);
+
+    const applyPreset = (t: "base" | "wall") => {
+        setType(t);
+        setInput({
+            ...input,
+            ...presets[t],
+        });
+    };
 
     return (
         <div>
+            <h1>Cabinet-Maker Toolkit</h1>
+
             <section>
-                <h1>Cabinet-Maker Toolkit</h1>
-                <p>
-                    Enter cabinet dimensions to generate a cut list and preview the cabinet
-                    in 3D.
-                </p>
+                <h2>Cabinet Type</h2>
+                <button onClick={() => applyPreset("base")}>Base Cabinet</button>
+                <button onClick={() => applyPreset("wall")}>Wall Cabinet</button>
+                <button onClick={() => setExploded(!exploded)}>
+                    {exploded ? "Normal View" : "Exploded View"}
+                </button>
             </section>
 
             <section>
-                <h2>3D Cabinet Preview</h2>
+                <h2>3D Preview</h2>
                 <Cabinet3D
-                    width={safeInput.width}
-                    height={safeInput.height}
-                    depth={safeInput.depth}
+                    width={safe.width}
+                    height={safe.height}
+                    depth={safe.depth}
+                    shelves={input.shelves}
+                    showBack={input.back}
+                    exploded={exploded}
                 />
             </section>
 
             <section>
-                <h2>Cut List Generator</h2>
+                <h2>Dimensions</h2>
 
                 <div className="form">
                     <label>Width (mm)</label>
@@ -69,17 +93,31 @@ export default function CutListPage() {
                         }
                     />
 
-                    <label>Material Thickness (mm)</label>
+                    <label>Shelves</label>
                     <input
                         type="number"
-                        value={input.thickness}
+                        min={0}
+                        value={input.shelves}
                         onChange={(e) =>
-                            setInput({ ...input, thickness: Number(e.target.value) || 1 })
+                            setInput({ ...input, shelves: Number(e.target.value) || 0 })
                         }
                     />
-                </div>
 
-                <h3>Cut List</h3>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={input.back}
+                            onChange={(e) =>
+                                setInput({ ...input, back: e.target.checked })
+                            }
+                        />
+                        Back Panel
+                    </label>
+                </div>
+            </section>
+
+            <section>
+                <h2>Cut List</h2>
                 <ul>
                     {cutList.map((item) => (
                         <li key={item.name}>
