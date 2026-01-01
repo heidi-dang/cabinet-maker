@@ -19,7 +19,6 @@
   },
   "scripts": {
     "dev": "npx parcel",
-    "prebuild": "rimraf dist",
     "start": "parcel",
     "build": "parcel build --no-content-hash --public-url ./"
   },
