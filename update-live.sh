@@ -15,12 +15,12 @@ echo "======================================"
 
 cd "$REPO_DIR"
 
-echo "==> Fetching latest code from GitHub"
+echo "==> Fetching latest code"
 git fetch origin
 git reset --hard origin/$BRANCH
 git clean -fd
 
-echo "==> Checking Node.js"
+echo "==> Ensuring Node.js"
 if ! command -v node >/dev/null 2>&1; then
   curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
   sudo apt install -y nodejs
@@ -29,27 +29,31 @@ fi
 node -v
 npm -v
 
-echo "==> Installing dependencies (clean)"
-rm -rf node_modules dist .parcel-cache
+echo "==> Cleaning previous install"
+rm -rf node_modules dist .parcel-cache package-lock.json
+
+echo "==> Installing dependencies"
 npm install
 
-echo "==> Building production bundle"
+echo "==> Ensuring rimraf is installed"
+npm install --save-dev rimraf
+
+echo "==> Running production build"
 npm run build
 
-echo "==> Deploying to Nginx web root: $WEB_ROOT"
+echo "==> Deploying to Nginx: $WEB_ROOT"
 sudo rm -rf "$WEB_ROOT"
 sudo mkdir -p "$WEB_ROOT"
 sudo cp -r dist/* "$WEB_ROOT"
-
 sudo chown -R www-data:www-data "$WEB_ROOT"
 sudo chmod -R 755 "$WEB_ROOT"
 
-echo "==> Testing Nginx configuration"
+echo "==> Testing Nginx"
 sudo nginx -t
 
 echo "==> Reloading Nginx"
 sudo systemctl reload nginx
 
 echo "======================================"
-echo " DEPLOYMENT COMPLETE"
+echo " DEPLOY SUCCESSFUL"
 echo "======================================"
