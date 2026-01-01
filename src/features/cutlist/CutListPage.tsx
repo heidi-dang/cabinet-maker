@@ -34,7 +34,12 @@ export default function CutListPage() {
         thickness: Math.max(1, input.thickness),
     };
 
-    const cutList = generateCutList(safe);
+    const cutList = generateCutList({
+        ...safe,
+        doors: input.doors ? 2 : 0,
+        doorGap: input.doorGap,
+        back: input.back,
+    });
 
     return (
         <div>
