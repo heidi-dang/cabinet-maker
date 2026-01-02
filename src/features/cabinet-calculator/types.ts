@@ -29,3 +29,15 @@ export type Panel = {
     height: number;
     quantity: number;
 };
+
+export type DrawerStackConfig = {
+    drawerCount: number;
+    verticalGap: number; // mm, e.g. 2
+};
+
+export type DrawerFront = {
+    index: number;
+    frontHeight: number;
+    fingerPullLength: number;
+    fingerPullOffset: number;
+};

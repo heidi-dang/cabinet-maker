@@ -1,6 +1,7 @@
 import { CabinetInput, Panel } from "./types";
 import { calculateDrawerBox } from "./calculateDrawerBox";
 import { calculateFingerPull } from "./calculateFingerPull";
+import { calculateDrawerFrontHeights } from "./calculateDrawerStack";
 
 export function calculateCabinet(input: CabinetInput): Panel[] {
     const { type, width, height, depth, thickness } = input;
@@ -56,49 +57,67 @@ export function calculateCabinet(input: CabinetInput): Panel[] {
         ];
     }
 
-    if (type === "DRAWER" && input.drawerConfig) {
+    if (type === "DRAWER" && input.drawerConfig && input.drawerStack) {
         const drawerBox = calculateDrawerBox(input.drawerConfig);
-        const fingerPull = calculateFingerPull(width);
+        const fronts = calculateDrawerFrontHeights(
+            input.drawerConfig.openingHeight,
+            input.drawerStack
+        );
 
-        return [
-            {
-                name: "Drawer Side Panels",
-                width: drawerBox.depth - 20,
-                height: drawerBox.height,
-                quantity: 2,
-            },
-            {
-                name: "Drawer Front (Internal)",
-                width: drawerBox.width,
-                height: drawerBox.height,
-                quantity: 1,
-            },
-            {
-                name: "Drawer Back",
-                width: drawerBox.width,
-                height: drawerBox.height,
-                quantity: 1,
-            },
-            {
-                name: "Drawer Bottom",
-                width: drawerBox.width,
-                height: drawerBox.depth - 20,
-                quantity: 1,
-            },
-            {
-                name: "Finger Pull Length (mm)",
-                width: fingerPull.length,
-                height: 0,
-                quantity: 1,
-            },
-            {
-                name: "Finger Pull Offset From Left (mm)",
-                width: fingerPull.offsetFromLeft,
-                height: 0,
-                quantity: 1,
-            },
-        ];
+        const panels = [];
+
+        fronts.forEach(front => {
+            const fingerPull = calculateFingerPull(width);
+
+            panels.push(
+                {
+                    name: `Drawer ${front.index} – Front Panel`,
+                    width: width,
+                    height: front.frontHeight,
+                    quantity: 1,
+                },
+                {
+                    name: `Drawer ${front.index} – Box Side`,
+                    width: drawerBox.depth - 20,
+                    height: front.frontHeight - 20,
+                    quantity: 2,
+                },
+                {
+                    name: `Drawer ${front.index} – Box Front`,
+                    width: drawerBox.width,
+                    height: front.frontHeight - 20,
+                    quantity: 1,
+                },
+                {
+                    name: `Drawer ${front.index} – Box Back`,
+                    width: drawerBox.width,
+                    height: front.frontHeight - 20,
+                    quantity: 1,
+                },
+                {
+                    name: `Drawer ${front.index} – Box Bottom`,
+                    width: drawerBox.width,
+                    height: drawerBox.depth - 20,
+                    quantity: 1,
+                },
+                {
+                    name: `Drawer ${front.index} – Finger Pull Length`,
+                    width: fingerPull.length,
+                    height: 0,
+                    quantity: 1,
+                },
+                {
+                    name: `Drawer ${front.index} – Finger Pull Offset`,
+                    width: fingerPull.offsetFromLeft,
+                    height: 0,
+                    quantity: 1,
+                }
+            );
+        });
+
+        return panels;
     }
+
 
     return [];
 }
