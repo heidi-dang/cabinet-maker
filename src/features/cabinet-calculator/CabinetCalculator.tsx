@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { calculateCabinet } from "./calculateCabinet";
 import { CabinetType } from "./types";
+import Cabinet3D from "../viewer3d/Cabinet3D";
 
 export default function CabinetCalculator() {
     const [type, setType] = useState<CabinetType>("BASE");
@@ -98,6 +99,16 @@ export default function CabinetCalculator() {
                     />
                 </>
             )}
+
+            <h3>3D Preview</h3>
+
+            <Cabinet3D
+                width={width}
+                height={height}
+                depth={depth}
+                drawerCount={type === "DRAWER" ? drawerCount : 0}
+                drawerGap={drawerGap}
+            />
 
             <h3>Cut List</h3>
 
