@@ -20,7 +20,8 @@
   "scripts": {
     "dev": "npx parcel",
     "start": "parcel",
-    "build": "parcel build --no-content-hash --public-url ./"
+    "build": "parcel build --no-content-hash --public-url ./",
+    "deploy": "wrangler pages deploy dist --project-name cabinet-maker"
   },
   "repository": {
     "type": "git",
