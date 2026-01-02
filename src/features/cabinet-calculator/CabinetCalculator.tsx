@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { calculateCabinet } from "./calculateCabinet";
 import { CabinetType } from "./types";
-import {Cabinet3D} from "../viewer3d/Cabinet3D";
+import Cabinet3D from "../viewer3d/Cabinet3D";
+
 
 export default function CabinetCalculator() {
     const [type, setType] = useState<CabinetType>("BASE");
