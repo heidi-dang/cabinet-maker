@@ -1,11 +1,10 @@
-import React from "react";
-import { HashRouter } from "react-router";
-import Layout from "./layout/Layout";
+import { ErrorBoundary } from "./app/ErrorBoundary";
+import CabinetCalculator from "./features/cabinet-calculator/CabinetCalculator";
 
 export default function App() {
     return (
-        <HashRouter>
-            <Layout />
-        </HashRouter>
+        <ErrorBoundary>
+            <CabinetCalculator />
+        </ErrorBoundary>
     );
 }
