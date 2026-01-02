@@ -1,0 +1,21 @@
+:root {
+    /* Colors */
+    --color-bg: #ffffff;
+    --color-text: #1d1d1f;
+    --color-muted: #6e6e73;
+    --color-accent: #0071e3;
+
+    /* Spacing */
+    --space-xs: 4px;
+    --space-sm: 8px;
+    --space-md: 16px;
+    --space-lg: 24px;
+    --space-xl: 40px;
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 14px;
+
+    /* Max width */
+    --content-width: 720px;
+}
